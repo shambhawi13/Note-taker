@@ -1,6 +1,8 @@
 const express = require('express');
 //const mysql = require('mysql');
 const path = require('path');
+const fs = require('fs');
+let db = require('./db/db.json');
 
 // Sets up the Express App
 // =============================================================
@@ -10,6 +12,7 @@ var PORT = process.env.PORT || 8080;
 // Sets up the Express app to handle data parsing
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.static('public'));
 
 // Routes
 // =============================================================
@@ -23,9 +26,39 @@ app.get("/notes", function(req, res) {
   res.sendFile(path.join(__dirname, "/public/notes.html"));
 });
 
-app.get("/notes/:id", function(req, res) {
+app.get("/api/notes", function(req, res) {
+  res.json(db);
+});
+
+app.get("/api/notes/:id", function(req, res) {
     res.sendFile(path.join(__dirname, "/public/notes.html"));
   });
+
+app.post("/api/notes", function(req,res){
+  console.log('Save called');
+  let data = req.body;
+  data.id = db.length;
+  db.push(data);
+  res.json(data);
+});
+
+app.put("/api/notes", function(req, res) {
+  // Empty out the arrays of data
+  let data = req.body;
+  let id = data.id;
+  db[id] = data;
+  res.json(data);
+});
+
+app.delete("/api/notes/:id", function(req,res){
+  let id = req.params.id;
+  let filteredData = db.filter(function(elem){
+    return elem.id != id;
+  });
+  db = [];
+  db = filteredData;
+  res.json(filteredData);
+});
 
 // Starts the server to begin listening
 // =============================================================
